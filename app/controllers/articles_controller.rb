@@ -1,4 +1,5 @@
 class ArticlesController < ApplicationController
+  before_action :update_page_views
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
   def index
@@ -8,10 +9,18 @@ class ArticlesController < ApplicationController
 
   def show
     article = Article.find(params[:id])
-    render json: article
+    if session[:page_views] < 3
+      render json: article
+    else
+      render json: { error: "You have reached the maximum number of page views" }, status: :unauthorized
+    end
   end
 
   private
+  def update_page_views
+    session[:page_views] ||= 0
+    session[:page_views] += 1
+  end
 
   def record_not_found
     render json: { error: "Article not found" }, status: :not_found
